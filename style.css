@@ -1,0 +1,988 @@
+/*====================================================
+    FONTES
+====================================================*/
+
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;600;700;800&display=swap');
+
+/*====================================================
+    VARIÁVEIS
+====================================================*/
+
+:root{
+
+    --red:#e4002b;
+    --red-light:#ff3358;
+    --black:#080808;
+    --dark:#141414;
+    --white:#f6f6f6;
+
+    --shadow:
+        8px 8px 0 #000;
+
+    --transition:
+        .25s cubic-bezier(.2,.8,.2,1);
+
+}
+
+/*====================================================
+    RESET
+====================================================*/
+
+*{
+
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+
+}
+
+html,
+body{
+
+    width:100%;
+    height:100%;
+
+    overflow:hidden;
+
+    background:black;
+
+    font-family:"Barlow",sans-serif;
+
+}
+
+/* Abertura */
+
+#intro{
+
+    position:fixed;
+
+    inset:0;
+
+    background:black;
+
+    z-index:99999;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+}
+
+#intro video{
+
+    width:100%;
+
+    height:100%;
+
+    object-fit:cover;
+
+}
+
+/*====================================================
+    CONTAINER
+====================================================*/
+
+#menu-container{
+
+    position:relative;
+
+    width:100vw;
+    height:100vh;
+
+    overflow:hidden;
+
+    background:var(--black);
+
+}
+
+/*====================================================
+    BACKGROUND
+====================================================*/
+
+#background{
+
+    position:absolute;
+
+    inset:0;
+
+    overflow:hidden;
+
+}
+
+/*====================================================
+    CAMADAS
+====================================================*/
+
+.bg-layer{
+
+    position:absolute;
+
+    inset:-15%;
+
+}
+
+/* Vermelho */
+
+.layer1{
+
+    background:
+        linear-gradient(
+        135deg,
+        #540010,
+        #8b001f,
+        #1a0004);
+
+    animation:
+        moveLayer1 18s linear infinite;
+
+}
+
+/* Preto */
+
+.layer2{
+
+    background:
+        repeating-linear-gradient(
+        -45deg,
+
+        transparent 0px,
+
+        transparent 90px,
+
+        rgba(255,255,255,.02) 92px,
+
+        rgba(255,255,255,.02) 94px
+
+        );
+
+    animation:
+        moveLayer2 12s linear infinite;
+
+}
+
+/* Luz */
+
+.layer3{
+
+    background:
+        radial-gradient(
+
+        circle at 50% 40%,
+
+        rgba(255,0,70,.28),
+
+        transparent 65%
+
+        );
+
+    animation:
+        pulseLight 5s ease-in-out infinite;
+
+}
+
+/*====================================================
+    RUÍDO
+====================================================*/
+
+#noise{
+
+    position:absolute;
+
+    inset:0;
+
+    opacity:.08;
+
+    background-image:
+
+        repeating-radial-gradient(
+
+        circle,
+
+        rgba(255,255,255,.10) 1px,
+
+        transparent 2px
+
+        );
+
+    animation:
+        noiseMove .25s infinite;
+
+}
+
+/*====================================================
+    PARTÍCULAS
+====================================================*/
+
+#particles{
+
+    position:absolute;
+
+    inset:0;
+
+    pointer-events:none;
+
+}
+
+#particles::before,
+#particles::after{
+
+    content:"";
+
+    position:absolute;
+
+    width:300%;
+    height:300%;
+
+    left:-100%;
+    top:-100%;
+
+    background-image:
+
+        radial-gradient(
+            white 1px,
+            transparent 1px
+        );
+
+    background-size:70px 70px;
+
+    opacity:.08;
+
+}
+
+#particles::before{
+
+    animation:
+        particles1 30s linear infinite;
+
+}
+
+#particles::after{
+
+    animation:
+        particles2 18s linear infinite reverse;
+
+}
+
+/*====================================================
+    DECORAÇÕES
+====================================================*/
+
+#decorations{
+
+    position:absolute;
+
+    inset:0;
+
+}
+
+.slash{
+
+    position:absolute;
+
+    background:var(--red);
+
+    transform:rotate(-20deg);
+
+    box-shadow:
+        var(--shadow);
+
+}
+
+.slash1{
+
+    width:600px;
+    height:40px;
+
+    top:8%;
+    left:-180px;
+
+}
+
+.slash2{
+
+    width:380px;
+    height:26px;
+
+    right:-120px;
+    top:20%;
+
+}
+
+.slash3{
+
+    width:500px;
+    height:30px;
+
+    left:-150px;
+    bottom:15%;
+
+}
+
+.slash4{
+
+    width:320px;
+    height:18px;
+
+    right:-100px;
+    bottom:8%;
+
+}
+
+/*====================================================
+    PERSONAGEM
+====================================================*/
+
+#character-container{
+
+    position:absolute;
+
+    right:0;
+
+    bottom:0;
+
+    width:45vw;
+
+    height:100vh;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:flex-end;
+
+    pointer-events:none;
+
+}
+
+#character{
+
+    max-height:95%;
+
+    animation:
+
+        floatCharacter 4s ease-in-out infinite;
+
+    filter:
+
+        drop-shadow(0 0 30px rgba(255,0,60,.5));
+
+}
+
+/*====================================================
+    LOGO
+====================================================*/
+
+#logo{
+
+    position:absolute;
+
+    left:70px;
+
+    top:60px;
+
+    z-index:10;
+
+}
+
+#logo h1{
+
+    font-family:"Bebas Neue";
+
+    line-height:.9;
+
+    letter-spacing:4px;
+
+}
+
+#logo span{
+
+    display:block;
+
+    font-size:6rem;
+
+    color:white;
+
+    text-shadow:
+
+        7px 7px black;
+
+}
+
+#logo small{
+
+    display:block;
+
+    font-size:2.5rem;
+
+    color: #ffffff;
+
+    letter-spacing:6px;
+
+}
+
+#tagline{
+
+    margin-top:18px;
+
+    font-weight:700;
+
+    color:white;
+
+    letter-spacing:4px;
+
+    font-size:1rem;
+
+}
+
+/*====================================================
+    MENU PRINCIPAL
+====================================================*/
+
+#main-menu{
+
+    position:absolute;
+
+    left:70px;
+
+    top:320px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:18px;
+
+    z-index:20;
+
+}
+
+/*====================================================
+    BOTÕES
+====================================================*/
+
+.menu-button{
+
+    position:relative;
+
+    width:360px;
+
+    height:68px;
+
+    padding-left:78px;
+
+    border:none;
+
+    cursor:pointer;
+
+    text-align:left;
+
+    font-family:"Bebas Neue",sans-serif;
+
+    font-size:2rem;
+
+    letter-spacing:2px;
+
+    color:white;
+
+    background:#111;
+
+    transform:skew(-18deg);
+
+    transition:all .22s cubic-bezier(.2,.8,.2,1);
+
+    box-shadow:
+        8px 8px 0 black;
+
+    overflow:hidden;
+
+}
+
+/* Corrige a inclinação do texto */
+
+.menu-button>*{
+
+    transform:skew(18deg);
+
+}
+
+.menu-button{
+
+    display:flex;
+
+    align-items:center;
+
+}
+
+/*====================================================
+    REFLEXO
+====================================================*/
+
+.menu-button::before{
+
+    content:"";
+
+    position:absolute;
+
+    left:-120px;
+
+    top:0;
+
+    width:70px;
+
+    height:100%;
+
+    background:
+
+        rgba(255,255,255,.15);
+
+    transform:skew(-20deg);
+
+}
+
+.menu-button:hover::before{
+
+    animation:shine .45s;
+
+}
+
+@keyframes shine{
+
+0%{
+
+left:-120px;
+
+}
+
+100%{
+
+left:430px;
+
+}
+
+}
+
+/*====================================================
+    CURSOR
+====================================================*/
+
+.indicator{
+
+    position:absolute;
+
+    left:18px;
+
+    width:26px;
+
+    height:26px;
+
+    background:var(--red);
+
+    transform:rotate(45deg);
+
+    transition:.25s;
+
+    box-shadow:
+
+        0 0 14px rgba(255,0,70,.6);
+
+}
+
+/*====================================================
+    HOVER
+====================================================*/
+
+.menu-button:hover{
+
+    transform:
+
+        skew(-18deg)
+
+        translateX(16px)
+
+        scale(1.04);
+
+    background:var(--red);
+
+}
+
+/*====================================================
+    SELECIONADO
+====================================================*/
+
+.menu-button.selected{
+
+    background:var(--red);
+
+    color:white;
+
+    transform:
+
+        skew(-18deg)
+
+        translateX(26px)
+
+        scale(1.05);
+
+}
+
+.menu-button.selected .indicator{
+
+    background:white;
+
+}
+
+/*====================================================
+    BORDA LATERAL
+====================================================*/
+
+.menu-button::after{
+
+    content:"";
+
+    position:absolute;
+
+    right:0;
+
+    top:0;
+
+    width:12px;
+
+    height:100%;
+
+    background:white;
+
+    opacity:.25;
+
+}
+
+/*====================================================
+    FOOTER
+====================================================*/
+
+#footer{
+
+    position:absolute;
+
+    left:50px;
+
+    bottom:25px;
+
+    right:50px;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    color:white;
+
+    opacity:.65;
+
+    font-size:.9rem;
+
+    letter-spacing:2px;
+
+    z-index:10;
+
+}
+
+/*====================================================
+    TRANSIÇÃO
+====================================================*/
+
+#transition-overlay{
+
+    position:absolute;
+
+    inset:0;
+
+    pointer-events:none;
+
+    overflow:hidden;
+
+}
+
+.transition-piece{
+
+    position:absolute;
+
+    width:140%;
+
+    height:22%;
+
+    left:-20%;
+
+    background:black;
+
+    transform:
+
+        translateX(-150%)
+
+        rotate(-10deg);
+
+}
+
+.t1{top:0;}
+.t2{top:20%;}
+.t3{top:40%;}
+.t4{top:60%;}
+.t5{top:80%;}
+
+/*====================================================
+    ANIMAÇÕES
+====================================================*/
+
+@keyframes floatCharacter{
+
+0%{
+
+transform:translateY(0);
+
+}
+
+50%{
+
+transform:translateY(-10px);
+
+}
+
+100%{
+
+transform:translateY(0);
+
+}
+
+}
+
+@keyframes moveLayer1{
+
+from{
+
+transform:translateX(0);
+
+}
+
+to{
+
+transform:translateX(-120px);
+
+}
+
+}
+
+@keyframes moveLayer2{
+
+from{
+
+transform:translateY(0);
+
+}
+
+to{
+
+transform:translateY(-80px);
+
+}
+
+}
+
+@keyframes pulseLight{
+
+0%{
+
+opacity:.35;
+
+transform:scale(1);
+
+}
+
+50%{
+
+opacity:.75;
+
+transform:scale(1.15);
+
+}
+
+100%{
+
+opacity:.35;
+
+transform:scale(1);
+
+}
+
+}
+
+@keyframes particles1{
+
+from{
+
+transform:translateY(0);
+
+}
+
+to{
+
+transform:translateY(-180px);
+
+}
+
+}
+
+@keyframes particles2{
+
+from{
+
+transform:translateX(0);
+
+}
+
+to{
+
+transform:translateX(120px);
+
+}
+
+}
+
+@keyframes noiseMove{
+
+0%{
+
+transform:translate(0,0);
+
+}
+
+25%{
+
+transform:translate(2px,-1px);
+
+}
+
+50%{
+
+transform:translate(-2px,1px);
+
+}
+
+75%{
+
+transform:translate(1px,2px);
+
+}
+
+100%{
+
+transform:translate(0,0);
+
+}
+
+}
+
+/*====================================================
+    RESPONSIVIDADE
+====================================================*/
+
+@media (max-width:900px){
+
+#logo{
+
+left:25px;
+top:25px;
+
+}
+
+#logo span{
+
+font-size:4rem;
+
+}
+
+#logo small{
+
+font-size:1.8rem;
+
+}
+
+#main-menu{
+
+left:25px;
+top:240px;
+
+}
+
+.menu-button{
+
+width:260px;
+
+height:58px;
+
+font-size:1.45rem;
+
+padding-left:60px;
+
+}
+
+#character-container{
+
+width:55vw;
+
+}
+
+#character{
+
+max-width:100%;
+max-height:80%;
+
+}
+
+}
+
+@media (orientation:landscape) and (max-height:500px){
+
+#logo{
+
+top:15px;
+
+}
+
+#logo span{
+
+font-size:3.5rem;
+
+}
+
+#main-menu{
+
+top:170px;
+
+gap:10px;
+
+}
+
+.menu-button{
+
+height:48px;
+
+font-size:1.2rem;
+
+width:220px;
+
+}
+
+#character{
+
+max-height:95%;
+
+}
+
+}
+
+/* Adicione isso ao final do seu menu.css */
+#transition-overlay {
+    z-index: 9999; /* Garante que está acima de tudo, mas abaixo do intro */
+}

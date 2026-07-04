@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Nubanko Chronicles</title>
+    <link rel="stylesheet" href="game.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div id="game-container">
+    <div id="battle-overlay"></div>
+
+    <img id="sprite-dialogo" src="" alt="Personagem Diálogo" style="display:none;">
+
+    <div id="hud" style="display:none;">
+        <div id="player-hud" class="hud-card">
+            <div class="hud-name">Nubanko</div>
+            <div class="hud-status" id="player-status-jogador">HP Nubanko: 100</div>
+        </div>
+        <div id="enemy-hud" class="hud-card">
+            <div class="hud-name" id="enemy-name">Inimigo</div>
+            <div class="hud-status" id="player-status">HP Inimigo: 0</div>
+        </div>
+    </div>
+
+    <div id="battlefield">
+        <img id="sprite-personagem" src="" alt="Personagem Combate" style="display:none;">
+        <img id="sprite-inimigo" src="" alt="Inimigo Combate" style="display:none;">
+        <img id="gif-invocacao" src="" alt="Invocação" style="display:none;">
+    </div>
+
+    <div id="nav-comentario" style="display:none;"></div>
+
+    <div id="caixa-dialogo" style="display:none;">
+        <div id="dialog-header">
+            <div id="nome-personagem">Personagem</div>
+        </div>
+        <div id="texto-dialogo"></div>
+        <div id="opcoes"></div>
+    </div>
+
+    <div id="battle-menu"></div>
+</div>
+<script src="game.js"></script>
+</body>
+</html>
