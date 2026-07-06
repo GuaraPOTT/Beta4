@@ -42,7 +42,7 @@ const bancoDeCenas = [
     { id: 0, tipo: "derrota", texto: "Você foi derrotado...", personagem: "Nubanko", imagemFundo: "img/fundo.jpg" },
     { 
         id: 1, tipo: "dialogo", texto: "O Executor de Silício bloqueia a passagem. Prepare-se!", personagem: "Nubanko", imagemFundo: "img/fundo.jpg", 
-        spriteDialogo: "img/nubanko_dialogo_assustado.png", 
+        spriteDialogo: "img/nubanko_dialogo.png", 
         opcoes: [{ texto: "Iniciar Batalha", proximoId: 2 }] 
     },
     { 
