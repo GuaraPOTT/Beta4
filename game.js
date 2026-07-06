@@ -3,22 +3,9 @@
 // ==========================================
 const audioManager = {
     bgmAtual: null,
-    // Comente estas linhas para testar sem os arquivos de som:
-    // bgmDialogo: new Audio('sons/price.mp3'),
-    // bgmCombate: new Audio('sons/price.mp3'),
-    // sfxAtaque: new Audio('sons/price.mp3'),
-    // ...
-    
-    tocarBGM(musica) {
-        // Deixe vazio ou apenas com um return
-        return; 
-    },
-    tocarSFX(som) {
-        return;
-    },
-    vincularSonsBotoes() {
-        return;
-    }
+    tocarBGM(musica) { return; },
+    tocarSFX(som) { return; },
+    vincularSonsBotoes() { return; }
 };
 
 // ==========================================
@@ -30,14 +17,13 @@ let inimigoAtual = null;
 let defendendo = false;
 let cenaAtual = null; 
 
-// Configuração do Protagonista (Múltiplos Sprites)
 const nubankoConfig = {
     spriteDialogo: "img/nubanko_dialogo.png",
     spriteCombate: {
-        idle: "img/nubanko.png",        // Verifique se o nome é exatamente esse
-        ataque: "img/nubanko.png",     // Se não tiver imagem de ataque, use a principal
-        defesa: "img/nubanko.png",     // Se não tiver imagem de defesa, use a principal
-        dano: "img/nubanko.png"        // Corrigido de "dialoho" para "nubanko.png"
+        idle: "img/nubanko.png",        
+        ataque: "img/nubanko_ataque.png",     
+        defesa: "img/nubanko_defesa.png",     
+        dano: "img/nubanko_dano.png"        
     }
 };
 
@@ -56,13 +42,14 @@ const bancoDeCenas = [
     { id: 0, tipo: "derrota", texto: "Você foi derrotado...", personagem: "Nubanko", imagemFundo: "img/fundo.jpg" },
     { 
         id: 1, tipo: "dialogo", texto: "O Executor de Silício bloqueia a passagem. Prepare-se!", personagem: "Nubanko", imagemFundo: "img/fundo.jpg", 
+        spriteDialogo: "img/nubanko_dialogo_assustado.png", 
         opcoes: [{ texto: "Iniciar Batalha", proximoId: 2 }] 
     },
     { 
         id: 2, tipo: "combate", 
         inimigo: { 
             nome: "Executor de Silício", hp: 60, golpes: ["investida", "corte"], fraqueza: "fogo", resistencia: "fisico", 
-            spriteCombate: { idle: "img/inimigo.png", ataque: "img/inimigo_ataque.png", defesa: "img/inimigo_defesa.png", dano: "img/inimigo_hit.png" },
+            spriteCombate: { idle: "img/inimigo.png", ataque: "img/inimigo_ataque.png", defesa: "img/inimigoAtaque.jpg", dano: "img/inimigoAtaque.jpg" },
             defendendo: false 
         }, 
         proximoId: 0 
@@ -78,13 +65,16 @@ function carregarCena(id) {
     cenaAtual = cena;
 
     const nav = document.getElementById("nav-comentario");
-    const caixaDialogo = document.getElementById("caixa-dialogo");
+    // Agora apontamos para o novo container que envolve a caixa e o header
+    const caixaDialogo = document.getElementById("dialog-container"); 
     const hud = document.getElementById("hud");
     const elementoFundo = document.getElementById("game-container"); 
     const spriteInimigo = document.getElementById("sprite-inimigo");
     const spriteJogadorCombate = document.getElementById("sprite-personagem");
     const spriteDialogo = document.getElementById("sprite-dialogo");
     const battleMenu = document.getElementById("battle-menu");
+    
+    document.getElementById("victory-screen").classList.remove("active");
 
     if (cena.imagemFundo) elementoFundo.style.backgroundImage = `url('${cena.imagemFundo}')`;
 
@@ -95,8 +85,7 @@ function carregarCena(id) {
         spriteInimigo.style.display = "none";
         spriteJogadorCombate.style.display = "none";
         
-        // Exibe o sprite de diálogo
-        spriteDialogo.src = nubankoConfig.spriteDialogo;
+        spriteDialogo.src = cena.spriteDialogo || nubankoConfig.spriteDialogo;
         spriteDialogo.style.display = "block";
         caixaDialogo.style.display = "block";
         battleMenu.innerHTML = "";
@@ -121,13 +110,12 @@ function carregarCena(id) {
         defendendo = false;
         
         caixaDialogo.style.display = "none";
-        spriteDialogo.style.display = "none"; // Esconde diálogo
+        spriteDialogo.style.display = "none";
         
         hud.style.display = "flex";
         nav.style.display = "block";
         document.getElementById("enemy-name").innerText = inimigoAtual.nome;
         
-        // Inicializa Sprites de Combate
         spriteJogadorCombate.src = nubankoConfig.spriteCombate.idle;
         spriteJogadorCombate.style.display = "block";
         
@@ -139,7 +127,7 @@ function carregarCena(id) {
         exibirMenuPrincipal();
     } 
     else if (cena.tipo === "derrota") {
-        audioManager.tocarBGM(null); // Para a música
+        audioManager.tocarBGM(null); 
         hud.style.display = "none";
         nav.style.display = "none";
         spriteInimigo.style.display = "none";
@@ -155,20 +143,14 @@ function carregarCena(id) {
     }
 }
 
-// Muda temporariamente o sprite de um personagem (animação de ação)
 function animarAcao(isJogador, acao, tempo = 800) {
     const img = isJogador ? document.getElementById("sprite-personagem") : document.getElementById("sprite-inimigo");
     const sprites = isJogador ? nubankoConfig.spriteCombate : inimigoAtual.spriteCombate;
-    
-    // Se a arte não existir, ele ignora silenciosamente o erro visual
     if (!sprites[acao]) return; 
     
     img.src = sprites[acao];
     setTimeout(() => {
-        // Retorna para o idle se ninguém morreu
-        if (hpJogador > 0 && hpAtualInimigo > 0) {
-            img.src = sprites.idle;
-        }
+        if (hpJogador > 0 && hpAtualInimigo > 0) img.src = sprites.idle;
     }, tempo);
 }
 
@@ -179,9 +161,13 @@ function atualizarDisplay() {
     document.getElementById("player-status-jogador").innerText = "HP Nubanko: " + hpJogador;
 }
 
-function aplicarShake() {
-    const sprite = document.getElementById("sprite-inimigo");
-    if(sprite) { sprite.classList.add("shake"); setTimeout(() => sprite.classList.remove("shake"), 300); }
+function aplicarShake(alvo, intensidade = "light") {
+    const sprite = document.getElementById(alvo);
+    if(sprite) { 
+        const classeAnimacao = intensidade === "heavy" ? "shake-heavy" : "shake-light";
+        sprite.classList.add(classeAnimacao); 
+        setTimeout(() => sprite.classList.remove(classeAnimacao), 400); 
+    }
 }
 
 function mostrarPopup(texto, tipo = "damage", alvo = "sprite-inimigo", offsetY = 0) {
@@ -229,10 +215,10 @@ function exibirMenuGolpes() {
 
 function defenderJogador() {
     defendendo = true;
-    animarAcao(true, 'defesa', 1500); // Jogador defende
+    animarAcao(true, 'defesa', 1500); 
     document.getElementById("nav-comentario").innerText = "Posição de defesa!";
     document.querySelectorAll("#battle-menu button").forEach(btn => btn.disabled = true);
-    setTimeout(turnoInimigo, 1000);
+    setTimeout(turnoInimigo, 1500);
 }
 
 function executarGolpe(golpe) {
@@ -240,9 +226,6 @@ function executarGolpe(golpe) {
     document.querySelectorAll("#battle-menu button").forEach(btn => btn.disabled = true);
 
     const nav = document.getElementById("nav-comentario");
-    
-    // --- LÓGICA DO GIF DE INVOCAÇÃO ---
-    // Adicionar timestamp na URL força o navegador a recarregar o GIF do zero
     const gif = document.getElementById("gif-invocacao");
     gif.src = "img/invocacao.gif?t=" + new Date().getTime(); 
     gif.style.display = "block";
@@ -250,47 +233,55 @@ function executarGolpe(golpe) {
     
     setTimeout(() => { gif.style.display = "none"; }, 1200);
 
-    // Animações de ataque/dano
     animarAcao(true, 'ataque');
     setTimeout(() => animarAcao(false, 'dano'), 500);
 
     let dano = golpe.dano;
-    let tipoTexto = ""; let estiloPopup = ""; let escudoBloqueou = false;
+    let tipoTexto = ""; let estiloPopup = ""; let escudoBloqueou = false; let intensidadeShake = "light";
 
     if(golpe.tipo === inimigoAtual.fraqueza) {
         dano *= 2; tipoTexto = "WEAK"; estiloPopup = "weak"; nav.innerText = "Fraqueza explorada!";
+        intensidadeShake = "heavy";
     } else if(golpe.tipo === inimigoAtual.resistencia) {
         dano = Math.floor(dano/2); tipoTexto = "RESIST"; estiloPopup = "resist"; nav.innerText = "O inimigo resistiu!";
+        intensidadeShake = "none";
     } else if(Math.random() < 0.10) { 
         dano *= 2; tipoTexto = "CRITICAL!"; estiloPopup = "critical"; nav.innerText = "Golpe Crítico!";
+        intensidadeShake = "heavy";
     } else {
         nav.innerText = golpe.nome + " acertou!";
     }
 
     if(inimigoAtual.defendendo) { 
         dano = Math.floor(dano/2); escudoBloqueou = true; nav.innerText += " (Bloqueio!)"; 
+        intensidadeShake = "none"; 
     }
 
     setTimeout(() => {
         audioManager.tocarSFX(audioManager.sfxAtaque);
+        
         if(tipoTexto !== "") mostrarPopup(tipoTexto, estiloPopup, "sprite-inimigo", -40);
         if(escudoBloqueou && tipoTexto === "") mostrarPopup("BLOCK", "miss", "sprite-inimigo", -40);
         
         mostrarPopup(String(dano), "damage", "sprite-inimigo", 30);
-        aplicarShake();
+        if (intensidadeShake !== "none") aplicarShake("sprite-inimigo", intensidadeShake);
         
         hpAtualInimigo -= dano;
         if(hpAtualInimigo < 0) hpAtualInimigo = 0;
         atualizarDisplay();
 
         if(hpAtualInimigo <= 0) {
-            nav.innerText = "VITÓRIA!";
-            const proximoId = cenaAtual ? cenaAtual.proximoId : 0;
-            document.getElementById("battle-menu").innerHTML = `<button onclick="carregarCena(${proximoId})">Continuar</button>`;
-            audioManager.vincularSonsBotoes();
+            nav.innerText = "O inimigo foi derrotado!";
+            document.getElementById("battle-menu").innerHTML = ""; 
+            
+            setTimeout(() => {
+                const proximoId = cenaAtual ? cenaAtual.proximoId : 0;
+                document.getElementById("victory-screen").classList.add("active");
+                document.getElementById("victory-options").innerHTML = `<button onclick="carregarCena(${proximoId})">Avançar</button>`;
+            }, 1200);
             return;
         }
-        setTimeout(turnoInimigo, 1400);
+        setTimeout(turnoInimigo, 2200);
     }, 500);
 }
 
@@ -302,7 +293,7 @@ function turnoInimigo() {
         inimigoAtual.defendendo = true;
         animarAcao(false, 'defesa', 1500);
         nav.innerText = inimigoAtual.nome + " entrou em guarda!";
-        setTimeout(exibirMenuPrincipal, 1200);
+        setTimeout(exibirMenuPrincipal, 1800);
         return;
     }
 
@@ -315,23 +306,27 @@ function turnoInimigo() {
 
     setTimeout(() => {
         let danoRecebido = golpe.dano;
+        let shake = "light";
+        
         if(defendendo) {
             danoRecebido = Math.floor(danoRecebido / 2);
             defendendo = false;
             mostrarPopup("BLOCK", "miss", "sprite-personagem", -40);
+            shake = "none";
         }
 
         hpJogador = Math.max(hpJogador - danoRecebido, 0);
         atualizarDisplay();
         nav.innerText = inimigoAtual.nome + " " + golpe.msg;
         mostrarPopup(String(danoRecebido), "damage", "sprite-personagem", 30);
+        if (shake !== "none") aplicarShake("sprite-personagem", shake);
 
         if(hpJogador <= 0) { 
-            animarAcao(true, 'dano', 9999); // Trava no dano
-            setTimeout(() => carregarCena(0), 1200); 
+            animarAcao(true, 'dano', 9999); 
+            setTimeout(() => carregarCena(0), 1500); 
             return; 
         }
-        setTimeout(exibirMenuPrincipal, 1400);
+        setTimeout(exibirMenuPrincipal, 2200);
     }, 500);
 }
 
