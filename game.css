@@ -42,7 +42,6 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--colo
     filter: drop-shadow(0 0 30px rgba(0,0,0,.6)); animation: idleAnimation 3s ease-in-out infinite;
 }
 
-/* GIF INVOCAÇÃO: Z-index alto e posicionado no centro */
 #gif-invocacao { 
     position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); 
     height: 50%; z-index: 999; object-fit: contain;
@@ -53,11 +52,19 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--colo
     50% { transform: var(--base-transform) translateY(-6px); } 
 }
 
-.shake { animation: shake .25s; }
-@keyframes shake { 
+/* SHAKE DINÂMICO */
+.shake-light { animation: shakeLight .3s cubic-bezier(.36,.07,.19,.97) both; }
+@keyframes shakeLight { 
     0%, 100% { transform: var(--base-transform) translateX(0); } 
-    25%, 75% { transform: var(--base-transform) translateX(-8px); } 
-    50% { transform: var(--base-transform) translateX(8px); } 
+    25%, 75% { transform: var(--base-transform) translateX(-6px); } 
+    50% { transform: var(--base-transform) translateX(6px); } 
+}
+
+.shake-heavy { animation: shakeHeavy .4s cubic-bezier(.36,.07,.19,.97) both; }
+@keyframes shakeHeavy { 
+    0%, 100% { transform: var(--base-transform) translate(0, 0); } 
+    20%, 60% { transform: var(--base-transform) translate(-15px, 8px) rotate(-2deg); } 
+    40%, 80% { transform: var(--base-transform) translate(15px, -8px) rotate(2deg); } 
 }
 
 /* HUD */
@@ -79,15 +86,21 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--colo
     box-shadow: var(--shadow-big); z-index: 150; animation: slideUp .3s;
 }
 
-/* CAIXA DE DIÁLOGO */
+/* CAIXA DE DIÁLOGO NOVA ESTRUTURA */
+#dialog-container {
+    position: absolute; left: 2%; right: 2%; bottom: 2%; z-index: 300; animation: slideUp .35s;
+}
+
 #caixa-dialogo {
-    position: absolute; left: 2%; right: 2%; bottom: 2%; min-height: 180px; background: rgba(245,245,245,.98); color: var(--color-text);
-    box-shadow: 10px 10px 0 black; clip-path: polygon(2% 0, 100% 0, 98% 100%, 0 100%); padding: 70px 35px 28px 35px; z-index: 300; animation: slideUp .35s;
+    min-height: 180px; background: rgba(245,245,245,.98); color: var(--color-text);
+    box-shadow: 10px 10px 0 black; clip-path: polygon(2% 0, 100% 0, 98% 100%, 0 100%); 
+    padding: 50px 35px 28px 35px; /* Padding superior maior para dar espaço ao nome */
 }
 
 #dialog-header {
-    position: absolute; left: 30px; top: -10px; background: var(--color-red); color: white; padding: 8px 26px;
-    font-family: 'Bebas Neue'; font-size: 2rem; letter-spacing: 2px; box-shadow: 6px 6px 0 black; transform: skew(-14deg);
+    position: absolute; left: 30px; top: -18px; background: var(--color-red); color: white; padding: 8px 26px;
+    font-family: 'Bebas Neue'; font-size: 2rem; letter-spacing: 2px; box-shadow: 6px 6px 0 black; 
+    transform: skew(-14deg); z-index: 301; /* Garante que fique acima da caixa */
 }
 #dialog-header > * { transform: skew(14deg); }
 #texto-dialogo { font-size: 1.45rem; line-height: 1.45; text-shadow: 1px 1px white; }
@@ -105,7 +118,6 @@ button:hover { transform: skew(-14deg) translateY(-3px) scale(1.03); background:
 #battle-menu button { min-width: 250px; text-align: left; position: relative; overflow: hidden; }
 #battle-menu button::before { content: ""; position: absolute; left: -60px; top: 0; width: 45px; height: 100%; background: rgba(255,255,255,.18); transform: skew(-20deg); }
 #battle-menu button:hover::before { animation: shine .45s; }
-@keyframes shine { 0% { left: -60px; } 100% { left: 330px; } }
 #battle-menu button:hover { border-left: 10px solid white; }
 
 /* POPUPS DE DANO */
@@ -121,6 +133,20 @@ button:hover { transform: skew(-14deg) translateY(-3px) scale(1.03); background:
 .battle-popup.heal { color: #59ff6d; }
 .battle-popup.miss { color: white; font-size: 2rem; }
 
+/* TELA DE VITÓRIA */
+#victory-screen {
+    position: absolute; inset: 0; background: rgba(0,0,0,0.85); display: flex; flex-direction: column; 
+    justify-content: center; align-items: center; z-index: 5000; opacity: 0; pointer-events: none; 
+    transition: opacity 0.5s ease; backdrop-filter: blur(3px);
+}
+#victory-screen h1 {
+    font-family: 'Bebas Neue', sans-serif; font-size: 8rem; color: #ffd200; letter-spacing: 5px;
+    text-shadow: 6px 6px 0 var(--color-red), 0 0 30px rgba(255,210,0,0.5); 
+    margin-bottom: 40px; transform: scale(0.5); transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+#victory-screen.active { opacity: 1; pointer-events: all; }
+#victory-screen.active h1 { transform: scale(1); }
+
 @keyframes popupBattle {
     0% { opacity: 0; transform: translate(-50%,30px) scale(.5); }
     20% { opacity: 1; transform: translate(-50%,0) scale(1.25); }
@@ -133,69 +159,57 @@ button:hover { transform: skew(-14deg) translateY(-3px) scale(1.03); background:
    RESPONSIVIDADE: CELULARES E TELAS PEQUENAS
    ========================================== */
 @media (max-width: 900px), (max-height: 600px) {
-    /* 1. Ajuste do HUD (Cartões de HP) */
-    .hud-card {
-        min-width: 160px; /* Reduzido de 260px */
-        padding: 8px 12px;
-        border-width: 5px !important;
-    }
-    .hud-name { 
-        font-size: 1.4rem; 
-    }
-    .hud-status { 
-        font-size: 0.9rem; 
-        margin-top: 4px; 
-    }
+    .hud-card { min-width: 160px; padding: 8px 12px; border-width: 5px !important; }
+    .hud-name { font-size: 1.4rem; }
+    .hud-status { font-size: 0.9rem; margin-top: 4px; }
 
-    /* 2. Ajuste do Menu de Combate (Botões) */
+    /* MENU DE COMBATE SUBINDO BEM MAIS */
     #battle-menu {
         left: 20px;
-        bottom: 15px;
+        bottom: 75px; /* Subiu substancialmente para não colar no fundo */
         gap: 8px;
     }
-    #battle-menu button, button {
-        min-width: 180px; /* Reduzido de 250px */
-        padding: 8px 24px;
-        font-size: 1.1rem;
-    }
+    #battle-menu button, button { min-width: 180px; padding: 8px 24px; font-size: 1.1rem; }
 
-    /* 3. Ajuste do Box de Comentários (Evitar sobreposição) */
-    #nav-comentario {
-        top: 80px; /* Mais próximo do HUD */
-        right: 20px;
-        min-width: 240px;
-        padding: 8px 16px;
-        font-size: 1rem;
-        border-width: 5px;
-    }
+    #nav-comentario { top: 75px; right: 20px; min-width: 240px; padding: 8px 16px; font-size: 1rem; border-width: 5px; }
 
-    /* 4. Ajuste dos Sprites (Para não ficarem atrás dos botões) */
-    #sprite-personagem {
-        height: 55%;
-        bottom: 18vh;
-        left: 2vw;
-    }
-    #sprite-inimigo {
-        height: 55%;
-        bottom: 18vh;
-    }
+    #sprite-personagem { height: 55%; bottom: 18vh; left: 2vw; }
+    #sprite-inimigo { height: 55%; bottom: 18vh; }
 
-    /* 5. Popups de Dano Menores */
     .battle-popup { font-size: 2rem; }
     .battle-popup.damage { font-size: 2.2rem; }
     .battle-popup.critical { font-size: 2.8rem; }
 
-    /* 6. Ajustes da Caixa de Diálogo */
+    /* DIÁLOGO MOBILE COM BOTÃO À DIREITA */
+    #dialog-container { bottom: 5%; }
+    
     #caixa-dialogo {
-        padding: 45px 20px 15px 20px;
-        min-height: 130px;
+        display: flex;
+        flex-direction: row; /* Coloca texto na esquerda, botão na direita */
+        align-items: center;
+        justify-content: space-between;
+        padding: 30px 15px 15px 15px; /* Padding interno menor */
+        min-height: 110px;
     }
-    #dialog-header {
-        font-size: 1.5rem;
-        padding: 4px 18px;
-        top: -15px;
-    }
+
     #texto-dialogo { 
         font-size: 1.1rem; 
+        flex: 1; 
+        padding-right: 15px; /* Espaço entre o texto e o botão */
     }
+
+    #opcoes { 
+        margin-top: 0; 
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    #opcoes button {
+        padding: 10px 20px;
+        font-size: 1.1rem;
+        min-width: unset;
+    }
+
+    #dialog-header { font-size: 1.5rem; padding: 4px 18px; top: -15px; left: 15px; }
 }
