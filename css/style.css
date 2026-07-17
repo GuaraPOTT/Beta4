@@ -35,9 +35,16 @@ html, body {
 }
 
 #game-container {
-    position: relative; width: 100%; height: 100%; max-width: 100%;
-    overflow: hidden; background-size: cover; background-position: center;
-    margin: 0; padding: 0;
+    position: relative;
+    z-index: 1; /* CRÍTICO: Cria o contexto de empilhamento para as camadas de fundo */
+    width: 100%; 
+    height: 100%; 
+    max-width: 100%;
+    overflow: hidden; 
+    background-size: cover; 
+    background-position: center;
+    margin: 0; 
+    padding: 0;
 }
 
 .bg-layer {
@@ -492,7 +499,7 @@ button.btn-ataque-total:hover { background: linear-gradient(135deg, #fff066, var
     /* Sprites mais baixos no mobile: deixa uma folga maior até o HUD no topo
        (telas curtas em paisagem têm pouca altura sobrando). */
     #party-row { bottom: 8%; width: 22vw; height: 45%; }
-    #enemy-row { bottom: 25vh; width: 60%; max-width: 60%; gap: 10px; } /* Aumentado de 18vh para 25vh */
+    #enemy-row { bottom: 18vh; width: 60%; max-width: 60%; gap: 10px; } /* Aumentado de 18vh para 25vh */
     #enemy-row .combat-slot .combat-sprite { height: 24vh; }
     #enemy-row[data-count="4"] .combat-slot .combat-sprite,
     #enemy-row[data-count="5"] .combat-slot .combat-sprite,
