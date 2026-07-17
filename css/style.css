@@ -121,7 +121,7 @@ html, body {
    rede de segurança ADICIONAL só para 4+ inimigos não vazarem da tela — o
    caso comum (1-3 inimigos) usa exatamente os valores-base abaixo. */
 #enemy-row {
-    position: absolute; left: 58%; bottom: 23vh; transform: translateX(-50%); /* Aumentado de 16vh para 23vh */
+    position: absolute; left: 58%; bottom: 12vh; transform: translateX(-60%); /* Aumentado de 16vh para 23vh */
     display: flex; flex-direction: row; justify-content: center; align-items: flex-end;
     gap: 15px; width: 55%; max-width: 55%;
     pointer-events: none;
@@ -313,7 +313,7 @@ button:disabled:hover, button.indisponivel:hover {
     transition: max-width .35s ease, opacity .25s ease;
 }
 #battle-menu-container.expandido #battle-menu {
-    max-width: min(78vw, 640px); opacity: 1; pointer-events: auto;
+    max-width: min(80vw, 800px); opacity: 1; pointer-events: auto;
 }
 #battle-menu button, #battle-menu .menu-titulo { min-width: 150px; white-space: nowrap; }
 /* título (ex.: "Nubanko, o que fazemos?") ocupa a linha inteira sozinho,
