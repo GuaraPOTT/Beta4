@@ -1,0 +1,520 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --color-red: #e6002d;
+    --color-red-light: #ff2d55;
+    --color-black: #0b0b0d;
+    --color-text: #111111;
+    --color-yellow: #ffd200;
+    --color-blue: #53b6ff;
+    --color-green: #59ff6d;
+    --color-panel: #f5f5f5;
+    --shadow-big: 8px 8px 0px #000;
+    --shadow-med: 5px 5px 0px #000;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+    width: 100%; height: 100%; overflow: hidden; background: var(--color-black);
+    font-family: 'Barlow Condensed', sans-serif; color: white;
+    touch-action: manipulation; /* remove o delay de duplo-toque em mobile */
+    -webkit-user-select: none; user-select: none;
+}
+
+/* ==========================================
+   VIEWPORT: 100% da tela real, sem letterbox.
+   (Uma versão anterior travava em 16:9 com barras pretas nas laterais —
+   removido a pedido: agora o jogo usa toda a largura/altura disponíveis.
+   Sprites/UI internos usam vw/vh/% relativos a ESTE container, que agora
+   é ~= ao viewport real, então não há mais descompasso de tamanho.)
+   ========================================== */
+#viewport-lock {
+    width: 100vw; max-width: 100%; height: 100vh; height: 100dvh;
+    overflow: hidden; background: #000;
+}
+
+#game-container {
+    position: relative; width: 100%; height: 100%; max-width: 100%;
+    overflow: hidden; background-size: cover; background-position: center;
+    margin: 0; padding: 0;
+}
+
+.bg-layer {
+    position: absolute; inset: 0; z-index: -1;
+    background-size: cover; background-position: center;
+    opacity: 0; transition: opacity 1s ease;
+}
+
+#battle-overlay { position: absolute; inset: 0; z-index: 0; background: linear-gradient(rgba(0,0,0,.15), rgba(0,0,0,.55)); pointer-events: none; }
+
+/* ==========================================
+   TELA DE CARREGAMENTO
+   ========================================== */
+#loading-screen {
+    position: fixed; inset: 0; z-index: 20000; background: var(--color-black);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+    transition: opacity .5s ease;
+}
+#loading-screen.carregado { opacity: 0; pointer-events: none; }
+.loading-logo { font-family: 'Bebas Neue', sans-serif; font-size: 2.6rem; letter-spacing: 4px; color: var(--color-red); text-shadow: 4px 4px 0 #000; }
+.loading-bar-track { width: min(60vw, 420px); height: 14px; background: #222; box-shadow: var(--shadow-med); overflow: hidden; }
+.loading-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--color-red), var(--color-red-light)); transition: width .25s ease; }
+.loading-texto { font-size: 1.1rem; letter-spacing: 1px; color: #ccc; }
+
+/* ==========================================
+   AVISO DE ORIENTAÇÃO (somente CSS, some em landscape)
+   ========================================== */
+#orientation-warning {
+    display: none; position: fixed; inset: 0; z-index: 30000; background: var(--color-black);
+    flex-direction: column; align-items: center; justify-content: center; gap: 18px; text-align: center; padding: 40px;
+}
+#orientation-warning p { font-size: 1.3rem; font-weight: 600; max-width: 320px; }
+.rotate-icon { font-size: 3.5rem; animation: girar 1.6s ease-in-out infinite; }
+@keyframes girar { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } }
+
+@media (orientation: portrait) and (max-width: 950px) {
+    #orientation-warning { display: flex; }
+    #viewport-lock { display: none; }
+}
+
+/* SPRITE DE DIÁLOGO */
+#sprite-dialogo {
+    position: absolute; left: 5vw; bottom: 0; height: 85%;
+    object-fit: contain; z-index: 250; pointer-events: none;
+    filter: drop-shadow(0 0 20px rgba(0,0,0,0.8));
+}
+
+#battlefield { position: absolute; inset: 0; pointer-events: none; }
+
+/* ==========================================
+   BATTLEFIELD DINÂMICO (N aliados x M inimigos)
+   ========================================== */
+
+/* ---- PARTY: pilha sobreposta (todos no mesmo espaço de grid) ----
+   O ativo fica colorido/maior/na frente; os demais recuam, encolhem e
+   ganham uma silhueta azulada — não crescem lado a lado como os inimigos. */
+#party-row {
+    position: absolute; left: 5vw; bottom: 10%;
+    width: 26vw; max-width: 260px; height: 55%;
+    display: grid;
+    pointer-events: none;
+}
+#party-row .combat-slot {
+    grid-area: 1 / 1;
+    height: 100%; max-width: 100%;
+    display: flex; align-items: flex-end; justify-content: center;
+    transition: transform .35s ease, filter .35s ease;
+    z-index: 1;
+}
+#party-row .combat-slot .combat-sprite { height: 100%; width: auto; }
+#party-row .combat-slot.active { transform: scale(1.05); z-index: 20; filter: none; }
+#party-row .combat-slot.inactive {
+    transform: translate(-16%, 8%) scale(0.8);
+    z-index: 5;
+    filter: brightness(0.3) sepia(1) hue-rotate(190deg);
+}
+
+/* ---- INIMIGOS: esquadrão estritamente horizontal, todos no mesmo "chão" ----
+   Valores conforme especificado: flex-direction:row, justify-content:center,
+   align-items:flex-end, gap e width fixos. As regras por data-count são uma
+   rede de segurança ADICIONAL só para 4+ inimigos não vazarem da tela — o
+   caso comum (1-3 inimigos) usa exatamente os valores-base abaixo. */
+#enemy-row {
+    position: absolute; left: 58%; bottom: 23vh; transform: translateX(-50%); /* Aumentado de 16vh para 23vh */
+    display: flex; flex-direction: row; justify-content: center; align-items: flex-end;
+    gap: 15px; width: 55%; max-width: 55%;
+    pointer-events: none;
+}
+
+.combat-slot {
+    --base-transform: scaleX(1);
+    display: flex; align-items: flex-end; justify-content: center;
+    pointer-events: auto; outline: none;
+}
+.combat-slot-enemy { --base-transform: scaleX(-1); }
+
+/* Tamanho-base dos inimigos: altura fixa em vh, largura livre (proporcional
+   à imagem) — igual ao pedido. Only encolhe (com um max-width extra) quando
+   há muitos inimigos, pra nunca vazar da tela mesmo em 4-6. */
+#enemy-row .combat-slot .combat-sprite { height: 35vh; width: auto; }
+#enemy-row[data-count="4"] .combat-slot .combat-sprite,
+#enemy-row[data-count="5"] .combat-slot .combat-sprite,
+#enemy-row[data-count="6"] .combat-slot .combat-sprite { height: 28vh; width: auto; max-width: 16vw; }
+
+.combat-sprite {
+    max-width: 100%; object-fit: contain; user-select: none;
+    transform: var(--base-transform);
+    filter: drop-shadow(0 0 30px rgba(0,0,0,.6));
+    animation: idleAnimation 3s ease-in-out infinite;
+    will-change: transform;
+}
+
+.combat-slot.is-down .combat-sprite {
+    transform: var(--base-transform) rotate(90deg) translateY(10%);
+    opacity: .55; animation: none; filter: grayscale(.4) drop-shadow(0 0 20px rgba(0,0,0,.6));
+    transition: transform .3s ease, opacity .3s ease;
+}
+.combat-slot.is-ko .combat-sprite { opacity: 0; transition: opacity .5s ease; }
+
+.combat-slot.selecionavel .combat-sprite {
+    cursor: pointer; animation: pulseSelecionavel 1s ease-in-out infinite;
+    filter: drop-shadow(0 0 18px var(--color-yellow)) drop-shadow(0 0 30px rgba(0,0,0,.6));
+}
+@keyframes pulseSelecionavel {
+    0%, 100% { filter: drop-shadow(0 0 12px var(--color-yellow)) drop-shadow(0 0 30px rgba(0,0,0,.6)); }
+    50% { filter: drop-shadow(0 0 26px var(--color-yellow)) drop-shadow(0 0 30px rgba(0,0,0,.6)); }
+}
+
+@keyframes idleAnimation {
+    0%, 100% { transform: var(--base-transform) translateY(0px); }
+    50% { transform: var(--base-transform) translateY(-6px); }
+}
+
+/* SHAKE DINÂMICO */
+.shake-light { animation: shakeLight .3s cubic-bezier(.36,.07,.19,.97) both; }
+@keyframes shakeLight {
+    0%, 100% { transform: var(--base-transform) translateX(0); }
+    25%, 75% { transform: var(--base-transform) translateX(-6px); }
+    50% { transform: var(--base-transform) translateX(6px); }
+}
+
+.shake-heavy { animation: shakeHeavy .4s cubic-bezier(.36,.07,.19,.97) both; }
+@keyframes shakeHeavy {
+    0%, 100% { transform: var(--base-transform) translate(0, 0); }
+    20%, 60% { transform: var(--base-transform) translate(-15px, 8px) rotate(-2deg); }
+    40%, 80% { transform: var(--base-transform) translate(15px, -8px) rotate(2deg); }
+}
+
+/* ==========================================
+   HUD (grupos dinâmicos de cartões)
+   ========================================== */
+/* z-index bem alto e ancorado no topo absoluto: mesmo que um sprite alto
+   alcance essa altura, o nameplate sempre fica por cima e legível. */
+#hud { position: absolute; top: 20px; left: 20px; right: 20px; display: flex; justify-content: space-between; z-index: 1000; pointer-events: none; gap: 12px; }
+/* Empilhado VERTICALMENTE (uma caixa abaixo da outra), não em linha —
+   party à esquerda alinhada ao início, inimigos à direita alinhados ao fim. */
+.hud-group { display: flex; flex-direction: column; gap: 10px; }
+#party-hud-group { align-items: flex-start; }
+#enemy-hud-group { align-items: flex-end; }
+
+.hud-card {
+    min-width: 220px; max-height: 108px; background: rgba(12,12,15,.92); padding: 14px 20px;
+    box-shadow: var(--shadow-big); transform: skew(-12deg); backdrop-filter: blur(5px); animation: slideUp .45s;
+    border-left: 8px solid var(--color-red);
+    transition: opacity .4s ease;
+    overflow: hidden; /* trava física: nada renderizado aqui pode estourar essa altura */
+}
+#enemy-hud-group .hud-card { border-left: none; border-right: 8px solid var(--color-red); }
+.hud-card > * { transform: skew(12deg); }
+.hud-card.hud-ko { opacity: .35; }
+
+.hud-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; letter-spacing: 2px; text-shadow: 2px 2px black; line-height: 1; }
+
+/* Barras compactas: o valor ("100/100") fica DENTRO da barra, num span
+   absoluto centralizado sobre o preenchimento — não há mais texto de
+   status separado abaixo. HP e SP usam a mesma estrutura (.hud-bar). */
+.hud-bar { position: relative; margin-top: 7px; height: 16px; width: 100%; background: #222; box-shadow: inset 0 0 0 1px #000; }
+.hud-bar-fill { height: 100%; transition: width .4s ease; }
+.hud-hp-fill.ok { background: var(--color-green); }
+.hud-hp-fill.atencao { background: var(--color-yellow); }
+.hud-hp-fill.critico { background: var(--color-red); }
+.hud-sp-bar { height: 14px; }
+.hud-sp-fill { background: var(--color-blue); }
+
+.hud-bar-texto {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif; font-size: .68rem; font-weight: 700; letter-spacing: .5px;
+    color: #fff; text-shadow: 1px 1px 1px black, 0 0 4px rgba(0,0,0,.9); pointer-events: none;
+}
+
+/* DOWN vira uma linha própria abaixo da barra de HP — nunca alarga a caixa
+   horizontalmente (é bloco, não fica ao lado do nome). Sem ícones de
+   fraqueza: foram removidos de propósito (não pedidos, quebravam a altura). */
+.hud-down-linha {
+    margin-top: 4px; font-family: 'Bebas Neue', sans-serif; font-size: .85rem; letter-spacing: 1.5px;
+    color: var(--color-yellow); text-shadow: 1px 1px black;
+}
+
+/* Log de batalha: isolado e centralizado estritamente no topo/centro,
+   width:fit-content pra não alargar artificialmente e nunca esmagar as
+   caixinhas de HP nas laterais (que agora ficam empilhadas na vertical,
+   fora da faixa horizontal central onde o log vive). */
+#nav-comentario {
+    position: absolute; top: 5%; left: 50%; transform: translateX(-50%);
+    width: fit-content; max-width: 70vw; padding: 14px 26px;
+    background: rgba(10,10,10,.95); border-bottom: 7px solid var(--color-red); font-size: 1.2rem; font-weight: 700;
+    text-align: center; white-space: nowrap; box-shadow: var(--shadow-big); z-index: 150; animation: slideUp .3s;
+}
+
+/* CAIXA DE DIÁLOGO */
+#dialog-container {
+    position: absolute; left: 2%; right: 2%; bottom: 2%; z-index: 300; animation: slideUp .35s;
+}
+
+#caixa-dialogo {
+    min-height: 180px; background: rgba(245,245,245,.98); color: var(--color-text);
+    box-shadow: 10px 10px 0 black; clip-path: polygon(2% 0, 100% 0, 98% 100%, 0 100%);
+    padding: 50px 35px 28px 35px; cursor: pointer;
+}
+
+#dialog-header {
+    position: absolute; left: 30px; top: -18px; background: var(--color-red); color: white; padding: 8px 26px;
+    font-family: 'Bebas Neue'; font-size: 2rem; letter-spacing: 2px; box-shadow: 6px 6px 0 black;
+    transform: skew(-14deg); z-index: 301;
+}
+#dialog-header > * { transform: skew(14deg); }
+#texto-dialogo { font-size: 1.45rem; line-height: 1.45; text-shadow: 1px 1px white; min-height: 1.45em; }
+#opcoes { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 24px; }
+
+button {
+    appearance: none; border: none; cursor: pointer; background: linear-gradient(135deg, var(--color-red), #c00028);
+    color: white; font-family: 'Bebas Neue'; font-size: 1.25rem; letter-spacing: 1px; padding: 14px 34px; transform: skew(-14deg);
+    transition: .18s; box-shadow: 6px 6px 0 black;
+    min-height: 48px; /* alvo de toque confortável (>= 44px recomendado) */
+}
+button:hover { transform: skew(-14deg) translateY(-3px) scale(1.03); background: linear-gradient(135deg, var(--color-red-light), var(--color-red)); }
+button:active { transform: skew(-14deg) translateY(0) scale(0.97); }
+button.btn-secundario { background: linear-gradient(135deg, #444, #222); }
+button.btn-secundario:hover { background: linear-gradient(135deg, #555, #333); }
+button:disabled, button.indisponivel {
+    opacity: .4; filter: grayscale(.7); cursor: not-allowed; box-shadow: 4px 4px 0 black;
+}
+button:disabled:hover, button.indisponivel:hover {
+    transform: skew(-14deg); background: linear-gradient(135deg, var(--color-red), #c00028);
+}
+
+/* MENU DE COMBATE — "menu sanduíche": fica recolhido (só o botão-gatilho,
+   em posição fixa) e o painel de opções expande HORIZONTALMENTE ao lado
+   dele sob demanda, pra não ocupar espaço permanente na tela. */
+/* MENU DE COMBATE — "menu sanduíche": fica recolhido (só o botão-gatilho,
+   em posição fixa) e o painel de opções expande HORIZONTALMENTE ao lado
+   dele sob demanda, pra não ocupar espaço permanente na tela.
+   z-index propositalmente MENOR que o do personagem ativo (.active = 20,
+   ver #party-row): se as áreas se tocarem, quem "ganha" visualmente é o
+   personagem, nunca o menu por cima do rosto/tronco dele. */
+#battle-menu-container {
+    position: absolute; left: 15px; bottom: 6%; z-index: 99;
+    display: flex; align-items: flex-end; /* Alterado de center para flex-end */
+    gap: 14px;
+}
+#battle-menu-toggle {
+    display: none; align-items: center; gap: 10px; min-width: unset; flex-shrink: 0;
+}
+#battle-menu-toggle.visivel { display: flex; }
+.battle-menu-toggle-icone { display: inline-block; transition: transform .25s ease; font-size: 1.1em; }
+#battle-menu-container.expandido .battle-menu-toggle-icone { transform: rotate(90deg); }
+
+#battle-menu {
+    display: flex; flex-direction: row; flex-wrap: wrap; 
+    align-items: flex-end; /* Alterado de center para flex-end para crescer para cima */
+    gap: 10px;
+    max-width: 0; opacity: 0; overflow: hidden; pointer-events: none;
+    transition: max-width .35s ease, opacity .25s ease;
+}
+#battle-menu-container.expandido #battle-menu {
+    max-width: min(78vw, 640px); opacity: 1; pointer-events: auto;
+}
+#battle-menu button, #battle-menu .menu-titulo { min-width: 150px; white-space: nowrap; }
+/* título (ex.: "Nubanko, o que fazemos?") ocupa a linha inteira sozinho,
+   empurrando os botões pra uma nova linha dentro do mesmo painel — sem
+   precisar de nenhuma mudança na estrutura que o JS já monta */
+#battle-menu .menu-titulo { flex-basis: 100%; min-width: 100%; }
+#battle-menu button { text-align: center; position: relative; overflow: hidden; }
+#battle-menu button::before { content: ""; position: absolute; left: -60px; top: 0; width: 45px; height: 100%; background: rgba(255,255,255,.18); transform: skew(-20deg); }
+#battle-menu button:hover::before { animation: shine .45s; }
+#battle-menu button:hover { border-left: 10px solid white; }
+.menu-titulo {
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; letter-spacing: 1px; color: var(--color-yellow);
+    text-shadow: 2px 2px black; padding: 6px 10px; background: rgba(0,0,0,.6); transform: skew(-10deg);
+}
+
+/* ONE MORE / BATON PASS */
+#one-more-prompt {
+    position: absolute; left: 50%; top: 38%; transform: translate(-50%, -50%) scale(.8);
+    z-index: 800; display: none; flex-direction: column; align-items: center; gap: 18px;
+    opacity: 0; transition: opacity .25s ease, transform .25s ease;
+}
+#one-more-prompt.ativo { display: flex; opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.one-more-titulo {
+    font-family: 'Bebas Neue', sans-serif; font-size: 4.5rem; color: var(--color-yellow); letter-spacing: 4px;
+    text-shadow: 5px 5px 0 var(--color-red), 0 0 30px rgba(255,210,0,.6);
+    transform: skew(-8deg);
+}
+.one-more-acoes { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+
+/* ATAQUE TOTAL (ALL-OUT ATTACK) */
+#all-out-prompt {
+    position: absolute; inset: 0; z-index: 4000; display: none; /* Aumentado de 900 para 4000 */
+    align-items: center; justify-content: center; pointer-events: none;
+}
+#all-out-prompt.ativo { display: flex; pointer-events: auto; }
+
+.all-out-cutin {
+    position: relative; width: 100%; padding: 34px 0; overflow: visible;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    background: linear-gradient(100deg, transparent 0%, var(--color-black) 10%, var(--color-red) 13%, var(--color-red) 87%, var(--color-black) 90%, transparent 100%);
+    animation: cutinEntra .35s cubic-bezier(.2,.9,.3,1.2) both;
+}
+.all-out-titulo {
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: 2px; color: white;
+    text-shadow: 2px 2px black;
+}
+.all-out-subtitulo {
+    font-family: 'Bebas Neue', sans-serif; font-size: 4rem; letter-spacing: 4px; color: var(--color-yellow);
+    text-shadow: 4px 4px 0 black; line-height: 1;
+}
+@keyframes cutinEntra {
+    from { transform: scaleY(0) skewX(-8deg); opacity: 0; }
+    to { transform: scaleY(1) skewX(-8deg); opacity: 1; }
+}
+.all-out-acoes { display: flex; gap: 18px; margin-top: 16px; flex-wrap: wrap; justify-content: center; }
+button.btn-ataque-total { background: linear-gradient(135deg, var(--color-yellow), #c99400); color: #000; }
+button.btn-ataque-total:hover { background: linear-gradient(135deg, #fff066, var(--color-yellow)); }
+
+#flash-overlay {
+    position: absolute; inset: 0; z-index: 7000; background: white; opacity: 0; pointer-events: none;
+}
+#flash-overlay.flash-ativo { animation: flashBrancoAtaqueTotal .18s ease; }
+@keyframes flashBrancoAtaqueTotal { 0% { opacity: 0; } 30% { opacity: .95; } 100% { opacity: 0; } }
+
+/* POPUPS DE DANO */
+.battle-popup {
+    position: absolute; left: 50%; transform: translateX(-50%); font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.8rem; font-weight: bold; pointer-events: none; z-index: 9999; animation: popupBattle .9s forwards;
+    text-shadow: 3px 3px black, 0 0 18px rgba(0,0,0,.8);
+}
+.battle-popup.damage { font-size: 3.2rem; color: white; }
+.battle-popup.critical { color: #ff2b2b; font-size: 4rem; }
+.battle-popup.weak { color: var(--color-yellow); }
+.battle-popup.resist { color: var(--color-blue); }
+.battle-popup.heal { color: var(--color-green); }
+.battle-popup.miss { color: white; font-size: 2rem; }
+
+/* TELA DE VITÓRIA */
+#victory-screen {
+    position: absolute; inset: 0; background: rgba(0,0,0,0.85); display: flex; flex-direction: column;
+    justify-content: center; align-items: center; z-index: 5000; opacity: 0; pointer-events: none;
+    transition: opacity 0.5s ease; backdrop-filter: blur(3px);
+}
+#victory-screen h1 {
+    font-family: 'Bebas Neue', sans-serif; font-size: 8rem; color: var(--color-yellow); letter-spacing: 5px;
+    text-shadow: 6px 6px 0 var(--color-red), 0 0 30px rgba(255,210,0,0.5);
+    margin-bottom: 40px; transform: scale(0.5); transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+#victory-screen.active { opacity: 1; pointer-events: all; }
+#victory-screen.active h1 { transform: scale(1); }
+
+@keyframes popupBattle {
+    0% { opacity: 0; transform: translate(-50%,30px) scale(.5); }
+    20% { opacity: 1; transform: translate(-50%,0) scale(1.25); }
+    40% { transform: translate(-50%,-5px) scale(1); }
+    100% { opacity: 0; transform: translate(-50%,-70px) scale(.9); }
+}
+@keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes shine { from { left: -60px; } to { left: 110%; } }
+
+/* ==========================================
+   TRANSIÇÕES DE CENA
+   ========================================== */
+#transition-overlay {
+    position: absolute; inset: 0; z-index: 6000; pointer-events: none; display: flex;
+}
+
+/* Fade simples (usado por padrão / cenas de diálogo calmas) */
+#transition-overlay.fade-cover { background: #000; opacity: 0; animation: fadeCoverIn .32s forwards; }
+@keyframes fadeCoverIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* Corte estilo mangá/Persona: painéis diagonais entrando em cascata */
+.transition-bar {
+    flex: 1; background: var(--color-black); transform: translateY(-100%);
+    border-right: 2px solid var(--color-red);
+}
+.transition-bar:nth-child(3) { background: var(--color-red); }
+
+#transition-overlay.manga-cobrindo .transition-bar { animation: barraEntra .32s cubic-bezier(.65,0,.35,1) forwards; }
+#transition-overlay.manga-cobrindo .transition-bar:nth-child(odd) { transform: translateY(-100%); }
+#transition-overlay.manga-cobrindo .transition-bar:nth-child(even) { transform: translateY(100%); }
+#transition-overlay.manga-cobrindo .transition-bar:nth-child(1) { animation-delay: 0ms; }
+#transition-overlay.manga-cobrindo .transition-bar:nth-child(2) { animation-delay: 40ms; }
+#transition-overlay.manga-cobrindo .transition-bar:nth-child(3) { animation-delay: 80ms; }
+#transition-overlay.manga-cobrindo .transition-bar:nth-child(4) { animation-delay: 120ms; }
+#transition-overlay.manga-cobrindo .transition-bar:nth-child(5) { animation-delay: 160ms; }
+#transition-overlay.manga-cobrindo .transition-bar:nth-child(6) { animation-delay: 200ms; }
+@keyframes barraEntra { from { transform: translateY(var(--de, -100%)); } to { transform: translateY(0); } }
+
+#transition-overlay.manga-revelando .transition-bar { animation: barraSai .32s cubic-bezier(.65,0,.35,1) forwards; }
+#transition-overlay.manga-revelando .transition-bar:nth-child(odd) { animation-name: barraSaiCima; }
+#transition-overlay.manga-revelando .transition-bar:nth-child(even) { animation-name: barraSaiBaixo; }
+#transition-overlay.manga-revelando .transition-bar:nth-child(1) { animation-delay: 0ms; }
+#transition-overlay.manga-revelando .transition-bar:nth-child(2) { animation-delay: 40ms; }
+#transition-overlay.manga-revelando .transition-bar:nth-child(3) { animation-delay: 80ms; }
+#transition-overlay.manga-revelando .transition-bar:nth-child(4) { animation-delay: 120ms; }
+#transition-overlay.manga-revelando .transition-bar:nth-child(5) { animation-delay: 160ms; }
+#transition-overlay.manga-revelando .transition-bar:nth-child(6) { animation-delay: 200ms; }
+@keyframes barraSaiCima { from { transform: translateY(0); } to { transform: translateY(-100%); } }
+@keyframes barraSaiBaixo { from { transform: translateY(0); } to { transform: translateY(100%); } }
+
+/* ==========================================
+   RESPONSIVIDADE: CELULARES E TELAS PEQUENAS (já em landscape)
+   ========================================== */
+@media (max-width: 900px), (max-height: 600px) {
+    .hud-card { min-width: 130px; max-height: 88px; padding: 8px 12px; border-width: 5px !important; }
+    .hud-name { font-size: 1.2rem; }
+    .hud-bar { height: 13px; margin-top: 5px; }
+    .hud-sp-bar { height: 11px; }
+    .hud-bar-texto { font-size: .6rem; }
+    .hud-down-linha { font-size: .72rem; margin-top: 3px; }
+
+    #battle-menu-container { left: 12px; bottom: 20%; gap: 10px; } /* Aumentado de 2% para 6% */
+    #battle-menu { gap: 6px; }
+    #battle-menu button, #battle-menu .menu-titulo, button { min-width: 120px; padding: 10px 16px; font-size: 0.95rem; }
+    #battle-menu-toggle { padding: 10px 18px; font-size: 1.05rem; }
+
+    #party-row .combat-slot {
+    grid-area: 1 / 1;
+    height: 40%; max-width: 100%;
+    display: flex; align-items: flex-end; justify-content: center;
+    transition: transform .35s ease, filter .35s ease;
+    z-index: 1;
+}
+#party-row .combat-slot .combat-sprite { height: 180%; width: auto; }
+#party-row .combat-slot.active { transform: scale(1.05); z-index: 20; filter: none; }
+#party-row .combat-slot.inactive {
+    transform: translate(-16%, 8%) scale(0.8);
+    z-index: 5;
+    filter: brightness(0.3) sepia(1) hue-rotate(190deg);
+}
+
+
+    #nav-comentario { top: 3%; max-width: 85vw; padding: 8px 16px; font-size: 1rem; border-width: 5px; }
+
+    /* Sprites mais baixos no mobile: deixa uma folga maior até o HUD no topo
+       (telas curtas em paisagem têm pouca altura sobrando). */
+    #party-row { bottom: 8%; width: 22vw; height: 45%; }
+    #enemy-row { bottom: 25vh; width: 60%; max-width: 60%; gap: 10px; } /* Aumentado de 18vh para 25vh */
+    #enemy-row .combat-slot .combat-sprite { height: 24vh; }
+    #enemy-row[data-count="4"] .combat-slot .combat-sprite,
+    #enemy-row[data-count="5"] .combat-slot .combat-sprite,
+    #enemy-row[data-count="6"] .combat-slot .combat-sprite { height: 18vh; max-width: 17vw; }
+    #sprite-dialogo { left: 2vw; }
+
+    .battle-popup { font-size: 1.6rem; }
+    .battle-popup.damage { font-size: 1.8rem; }
+    .battle-popup.critical { font-size: 2.2rem; }
+
+    .one-more-titulo { font-size: 2.6rem; }
+    .all-out-subtitulo { font-size: 2.2rem; }
+    .all-out-titulo { font-size: 1.1rem; }
+
+    #dialog-container { bottom: 5%; }
+
+    #caixa-dialogo {
+        display: flex; flex-direction: row; align-items: center; justify-content: space-between;
+        padding: 30px 15px 15px 15px; min-height: 100px;
+    }
+    #texto-dialogo { font-size: 1rem; flex: 1; padding-right: 15px; }
+    #opcoes { margin-top: 0; display: flex; flex-direction: column; justify-content: center; }
+    #opcoes button { padding: 10px 18px; font-size: 1rem; min-width: unset; }
+    #dialog-header { font-size: 1.3rem; padding: 4px 18px; top: -15px; left: 15px; }
+}

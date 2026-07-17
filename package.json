@@ -1,0 +1,10 @@
+{
+  "name": "nubanko-chronicles",
+  "type": "module",
+  "private": true,
+  "description": "Visual Novel + RPG de combate por turnos estilo Persona 5.",
+  "scripts": {
+    "test": "npm install jsdom --no-save --silent && node test_combat_integration.mjs && node test_scene_manager.mjs && node test_new_mechanics.mjs && node test_ui_and_sp.mjs"
+  }
+}
+

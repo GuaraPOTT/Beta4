@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Nubanko Chronicles</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- Tela de carregamento: cobre tudo até imagens + áudio estarem prontos -->
+<div id="loading-screen">
+    <div class="loading-logo">NUBANKO CHRONICLES</div>
+    <div class="loading-bar-track"><div class="loading-bar-fill" id="loading-bar-fill"></div></div>
+    <div class="loading-texto" id="loading-texto">Carregando...</div>
+</div>
+
+<!-- Aviso de orientação: some sozinho via CSS quando o dispositivo está em paisagem -->
+<div id="orientation-warning">
+    <div class="rotate-icon">📱</div>
+    <p>Gire seu dispositivo para jogar em modo paisagem</p>
+</div>
+
+<!-- Wrapper que trava a proporção 16:9 e centraliza (letterbox) em qualquer tela -->
+<div id="viewport-lock">
+    <div id="game-container">
+
+        <div id="bg-layer-a" class="bg-layer"></div>
+        <div id="bg-layer-b" class="bg-layer"></div>
+        <div id="battle-overlay"></div>
+
+        <img id="sprite-dialogo" src="" alt="Personagem Diálogo" style="display:none;">
+
+        <div id="hud" style="display:none;">
+            <div id="party-hud-group" class="hud-group"></div>
+            <div id="enemy-hud-group" class="hud-group"></div>
+        </div>
+
+        <div id="battlefield">
+            <div id="enemy-row"></div>
+            <div id="party-row"></div>
+            <img id="gif-invocacao" src="" alt="Invocação" style="display:none;">
+        </div>
+
+        <div id="nav-comentario" style="display:none;"></div>
+
+        <div id="dialog-container" style="display:none;">
+            <div id="dialog-header">
+                <div id="nome-personagem">Personagem</div>
+            </div>
+            <div id="caixa-dialogo">
+                <div id="texto-dialogo"></div>
+                <div id="opcoes"></div>
+            </div>
+        </div>
+
+        <div id="battle-menu-container">
+            <button id="battle-menu-toggle" type="button" aria-expanded="false" aria-controls="battle-menu">
+                <span class="battle-menu-toggle-icone">☰</span> AGIR
+            </button>
+            <div id="battle-menu"></div>
+        </div>
+        <div id="one-more-prompt"></div>
+        <div id="all-out-prompt"></div>
+        <div id="flash-overlay"></div>
+
+        <div id="victory-screen">
+            <h1>VITÓRIA!</h1>
+            <div id="victory-options"></div>
+        </div>
+
+        <div id="transition-overlay">
+            <div class="transition-bar"></div>
+            <div class="transition-bar"></div>
+            <div class="transition-bar"></div>
+            <div class="transition-bar"></div>
+            <div class="transition-bar"></div>
+            <div class="transition-bar"></div>
+        </div>
+
+    </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
