@@ -80,7 +80,7 @@ export const PERSONAGENS = {
         resistencias: ['fisico'],
         nulo: [],
         absorve: [],
-        spriteDialogo: 'img/nubanko_dialogo.png',
+        spriteDialogo: 'img/nubanko.png',
         spriteCombate: {
             idle:   'img/nubanko.png',
             ataque: 'img/nubanko_ataque.png',
@@ -256,7 +256,7 @@ export const BANCO_DE_CENAS = [
         personagem: 'Nubanko',
         texto: 'O Executor de Silício bloqueia a passagem. Prepare-se!',
         imagemFundo: 'img/fundo.jpg',
-        spriteDialogo: 'img/nubanko_dialogo_assustado.png',
+        spriteDialogo: 'img/nubanko.png',
         bgm: 'dialogo',
         transicao: 'manga',
         opcoes: [{ texto: 'Iniciar Batalha', proximoId: 2 }]
@@ -275,7 +275,7 @@ export const BANCO_DE_CENAS = [
         personagem: 'Nubanko',
         texto: 'Um segundo alvo se aproxima rápido demais... vou precisar manter a guarda alta!',
         imagemFundo: 'img/fundo.jpg',
-        spriteDialogo: 'img/nubanko_dialogo.png',
+        spriteDialogo: 'img/nubanko.png',
         bgm: 'dialogo',
         transicao: 'fade',
         opcoes: [{ texto: 'Continuar', proximoId: 4 }]
@@ -285,7 +285,7 @@ export const BANCO_DE_CENAS = [
         imagemFundo: 'img/fundo.jpg',
         bgm: 'combate',
         transicao: 'manga',
-        curarPartyAntes: false,
+        curarPartyAntes: true,
         party: ['nubanko', 'andre'],
         inimigos: ['executor_silicio', 'executor_silicio_jr', 'executor_silicio_jr'],
         proximoId: 5
@@ -295,16 +295,12 @@ export const BANCO_DE_CENAS = [
         personagem: 'Nubanko',
         texto: 'Os dois Executores foram desativados. A passagem está livre... por enquanto.',
         imagemFundo: 'img/fundo.jpg',
-        spriteDialogo: 'img/nubanko_dialogo.png',
+        spriteDialogo: 'img/nubanko.png',
         bgm: 'vitoria',
         transicao: 'fade',
         opcoes: [{ texto: 'Reiniciar Demonstração', proximoId: 1 }]
     }
 ];
-
-// ---------- FÁBRICAS DE INSTÂNCIA ----------
-// Sempre devolvem uma CÓPIA independente (nunca o objeto original do roster),
-// já com hp/sp no máximo e estados de batalha zerados.
 
 let contadorInstancias = 0; // Contador global para gerar IDs únicos no DOM
 
